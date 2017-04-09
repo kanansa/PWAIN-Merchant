@@ -29,7 +29,7 @@
         android:inputType="phone"
         android:gravity="center"
         android:layout_below="@+id/phoneTitle"
-        android:text="123"/>
+        android:text="+919035132272"/>
 
     <TextView
         android:id="@+id/itemTitle"

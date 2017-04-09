@@ -15,6 +15,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
     EditText sellerNote;
     Button sendPaymentRequest;
     Button generateStaticQR;
+
+    private OkHttpClient mClient = new OkHttpClient();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,10 +115,15 @@ public class MainActivity extends AppCompatActivity {
             Intent i = new Intent(getApplicationContext(), QrActivity.class);
             i.putExtra("url", url);
             // 5. Sending an SMS to the customer with the tiny url and the targeted ad mail
-            sendSMS(customerPhone.getText().toString(), String.format("Here is your payment url: %s", url));
-            sendSMS(customerPhone.getText().toString(), "It looks like you recently purchased " + item.getText()
-                    .toString() + ". You can get upto 20% off on " + item.getText()
-                    .toString() + " using Jhinga Lala app and paying with Amazon Pay");
+//            sendSMS(customerPhone.getText().toString(), String.format("Here is your payment url: %s", url));
+//            sendSMS(customerPhone.getText().toString(), "It looks like you recently purchased " + item.getText()
+//                    .toString() + ". You can get upto 20% off on " + item.getText()
+//                    .toString() + " using Jhinga Lala app and paying with Amazon Pay");
+            sendSMSusingTwilio(customerPhone.getText().toString(), String.format("Here is your payment url: %s", url));
+            sendSMSusingTwilio(customerPhone.getText().toString(), "You recently purchased " + item
+                    .getText()
+                    .toString() + ".Get upto 20% off on " + item.getText()
+                    .toString() + " only on HOOLI when paying with A-Pay");
             //6. Sending the initiate payment URL to QR Activity so that it can be encoded into a QR
             startActivity(i);
         } catch (Exception e) {
@@ -132,6 +148,50 @@ public class MainActivity extends AppCompatActivity {
         startActivity(i);
     }
 
+    /**
+     * Sends an SMS using TWILIO
+     * @param to
+     * @param body
+     */
+    //TODO DO NOT FORGET TO UPDATE THE NGROK URL
+    public void sendSMSusingTwilio(String to, String body) {
+        try {
+            //get ngrok url after SMS backend is up
+            post("http://5005ff38.ngrok.io/sms", new Callback() {
+
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    e.printStackTrace();
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.e("Twilio", "Successfully sent the message.");
+                        }
+                    });
+                }
+            }, to, body);
+        } catch (IOException e) {
+            Log.e("error", "error", e);
+        }
+    }
+
+    Call post(String url, Callback callback, String to, String body) throws IOException {
+        RequestBody formBody = new FormBody.Builder()
+                .add("To", to)
+                .add("Body", body)
+                .build();
+        Request request = new Request.Builder()
+                .url(url)
+                .post(formBody)
+                .build();
+        Call response = mClient.newCall(request);
+        response.enqueue(callback);
+        return response;
+    }
 
     /**
      * Sends an SMS to the customer with the supplied message
@@ -141,12 +201,12 @@ public class MainActivity extends AppCompatActivity {
      */
     public void sendSMS(String phoneNumber, String message) {
         Log.e("sms", "sending sms");
-       try {
-           SmsManager smsManager = SmsManager.getDefault();
-           smsManager.sendTextMessage(phoneNumber, "PWAIN", message, null, null);
-       }catch (Exception e){
-           Log.wtf("sms","",e);
-       }
+        try {
+            SmsManager smsManager = SmsManager.getDefault();
+            smsManager.sendTextMessage(phoneNumber, "PWAIN", message, null, null);
+        } catch (Exception e) {
+            Log.wtf("sms", "", e);
+        }
     }
 
     /**
