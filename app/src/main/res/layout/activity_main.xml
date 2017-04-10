@@ -121,6 +121,15 @@
             android:text="Send Payment Request"
             android:layout_marginTop="11dp"/>
 
+        <Button
+            android:id="@+id/otpRequestButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/Amazon_Orange"
+            android:layout_below="@id/static_qr_button"
+            android:text="Send OTP Request"
+            android:layout_marginTop="11dp"/>
+
 
 
 </RelativeLayout>

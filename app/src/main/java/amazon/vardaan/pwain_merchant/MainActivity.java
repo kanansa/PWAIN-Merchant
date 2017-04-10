@@ -34,6 +34,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -47,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     EditText item;
     EditText sellerNote;
     Button sendPaymentRequest;
+    Button sendOTPRequest;
     Button generateStaticQR;
 
     private OkHttpClient mClient = new OkHttpClient();
@@ -75,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
         item = (EditText) findViewById(R.id.editItem);
         sellerNote = (EditText) findViewById(R.id.editSellerNote);
         sendPaymentRequest = (Button) findViewById(R.id.paymentRequestButton);
+        sendOTPRequest = (Button) findViewById(R.id.otpRequestButton);
         generateStaticQR = (Button) findViewById(R.id.static_qr_button);
         // Creating a listener for "send payment request" button click. This will be called every time the button is
         // clicked
@@ -82,6 +85,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 sendPaymentRequest();
+            }
+        });
+        sendOTPRequest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendOTPPaymentRequest();
             }
         });
         // Creating a listener for "send payment request" button click. This will be called every time the button is
@@ -99,7 +108,36 @@ public class MainActivity extends AppCompatActivity {
      * Sends an SMS to the user with the tiny URL and passes the URL to QRActivity so that it can be encoded into a
      * QR code
      */
-    private void sendPaymentRequest() {
+    private void sendOTPPaymentRequest() {
+        try {
+
+            // 5. Sending an SMS to the customer with the tiny url and the targeted ad mail
+//            sendSMS(customerPhone.getText().toString(), String.format("Here is your payment url: %s", url));
+//            sendSMS(customerPhone.getText().toString(), "It looks like you recently purchased " + item.getText()
+//                    .toString() + ". You can get upto 20% off on " + item.getText()
+//                    .toString() + " using Jhinga Lala app and paying with Amazon Pay");
+            Random random = new Random();
+            String otp = String.format("%04d", random.nextInt(10000));
+            Log.wtf("otp created",otp);
+            sendSMSusingTwilio(customerPhone.getText().toString(), String.format("Your OTP is: %s", otp));
+
+
+
+            Intent i = new Intent(getApplicationContext(), otpActivity.class);
+            i.putExtra("otp", otp);
+            i.putExtra("orderTotalAmount", amount.getText().toString());
+            i.putExtra("mobileNumber",customerPhone.getText().toString());
+            startActivity(i);
+            sendSMSusingTwilio(customerPhone.getText().toString(), "You recently purchased " + item
+                    .getText()
+                    .toString() + ".Get upto 20% off on " + item.getText()
+                    .toString() + " only on HOLI when paying with A-Pay");
+
+        } catch (Exception e) {
+            Log.e("error", "error", e);
+        }
+    }
+ private void sendPaymentRequest() {
         try {
             // 3. Make a call to tinyUrl API to get a shortened URL.
             // ShortenUrl() is an ASYNC task. This is because all network calls have to be made asynchronously.
